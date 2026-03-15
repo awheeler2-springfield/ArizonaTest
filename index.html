@@ -288,12 +288,18 @@
       padding: 14px;
       background: #fafcfd;
       text-align: center;
+      transition: background 0.25s ease, border-color 0.25s ease;
     }
 
     .badge-card.unlocked {
       border-style: solid;
-      background: #edf8f0;
-      border-color: var(--success-border);
+      background: #163447;
+      border-color: #163447;
+      color: #ffffff;
+    }
+
+    .badge-card.unlocked .subtle {
+      color: #d4e3ec;
     }
 
     .badge-visual {
@@ -349,6 +355,16 @@
       font-weight: bold;
       margin-top: 12px;
       margin-bottom: 4px;
+    }
+
+    .score-chip {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #fff;
+      border: 1px solid var(--warning-border);
+      font-weight: bold;
+      margin-bottom: 10px;
     }
 
     @media (max-width: 840px) {
@@ -463,20 +479,10 @@
         <section class="sidebar-section">
           <h3>Competency Badge</h3>
           <div id="badgeCard" class="badge-card">
-            <svg class="badge-visual" viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg" aria-label="Evidence Triage badge">
-              <circle cx="110" cy="110" r="92" fill="#dcecf5" stroke="#2c6e91" stroke-width="8"/>
-              <circle cx="110" cy="110" r="74" fill="#ffffff" stroke="#c9d8e4" stroke-width="4"/>
-              <rect x="76" y="56" width="68" height="92" rx="8" fill="#eef4f8" stroke="#526b7d" stroke-width="3"/>
-              <rect x="92" y="44" width="36" height="16" rx="6" fill="#2c6e91"/>
-              <line x1="88" y1="82" x2="132" y2="82" stroke="#526b7d" stroke-width="4" stroke-linecap="round"/>
-              <line x1="88" y1="98" x2="132" y2="98" stroke="#526b7d" stroke-width="4" stroke-linecap="round"/>
-              <line x1="88" y1="114" x2="120" y2="114" stroke="#526b7d" stroke-width="4" stroke-linecap="round"/>
-              <circle cx="145" cy="145" r="24" fill="#2c6e91"/>
-              <path d="M134 145l8 8 16-18" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
+            <div id="badgeVisualWrap"></div>
             <strong>Evidence Triage Certification</strong>
             <p class="subtle">
-              Locked until all triage cases are completed and the documentation note is reviewed.
+              Locked until all triage cases are completed and the documentation note reaches 75% competency.
             </p>
           </div>
         </section>
@@ -485,8 +491,8 @@
   </div>
 
   <script>
-    const badgeSVG = `
-      <svg class="badge-visual" viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg" aria-label="Evidence Triage badge">
+    const lockedBadgeSVG = `
+      <svg class="badge-visual" viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg" aria-label="Locked Evidence Triage badge">
         <circle cx="110" cy="110" r="92" fill="#dcecf5" stroke="#2c6e91" stroke-width="8"/>
         <circle cx="110" cy="110" r="74" fill="#ffffff" stroke="#c9d8e4" stroke-width="4"/>
         <rect x="76" y="56" width="68" height="92" rx="8" fill="#eef4f8" stroke="#526b7d" stroke-width="3"/>
@@ -496,6 +502,20 @@
         <line x1="88" y1="114" x2="120" y2="114" stroke="#526b7d" stroke-width="4" stroke-linecap="round"/>
         <circle cx="145" cy="145" r="24" fill="#2c6e91"/>
         <path d="M134 145l8 8 16-18" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    `;
+
+    const unlockedBadgeSVG = `
+      <svg class="badge-visual" viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg" aria-label="Unlocked Evidence Triage badge">
+        <circle cx="110" cy="110" r="92" fill="#163447" stroke="#0f2431" stroke-width="8"/>
+        <circle cx="110" cy="110" r="74" fill="#1f455d" stroke="#89abc0" stroke-width="4"/>
+        <rect x="76" y="56" width="68" height="92" rx="8" fill="#dfeef6" stroke="#ffffff" stroke-width="3"/>
+        <rect x="92" y="44" width="36" height="16" rx="6" fill="#8fd3ff"/>
+        <line x1="88" y1="82" x2="132" y2="82" stroke="#35586f" stroke-width="4" stroke-linecap="round"/>
+        <line x1="88" y1="98" x2="132" y2="98" stroke="#35586f" stroke-width="4" stroke-linecap="round"/>
+        <line x1="88" y1="114" x2="120" y2="114" stroke="#35586f" stroke-width="4" stroke-linecap="round"/>
+        <circle cx="145" cy="145" r="24" fill="#0d2230"/>
+        <path d="M134 145l8 8 16-18" fill="none" stroke="#8ff0b5" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
     `;
 
@@ -581,6 +601,7 @@
     let completedCases = 0;
     let currentSelection = null;
     let moduleFinished = false;
+    let badgeUnlocked = false;
 
     const caseTitle = document.getElementById("caseTitle");
     const caseSubtitle = document.getElementById("caseSubtitle");
@@ -599,7 +620,31 @@
     const verificationBox = document.getElementById("verificationBox");
     const badgeBox = document.getElementById("badgeBox");
     const badgeCard = document.getElementById("badgeCard");
+    const badgeVisualWrap = document.getElementById("badgeVisualWrap");
     const studentLog = document.getElementById("studentLog");
+
+    function renderLockedBadge() {
+      badgeCard.className = "badge-card";
+      badgeVisualWrap.innerHTML = lockedBadgeSVG;
+      badgeCard.innerHTML = `
+        <div id="badgeVisualWrap">${lockedBadgeSVG}</div>
+        <strong>Evidence Triage Certification</strong>
+        <p class="subtle">
+          Locked until all triage cases are completed and the documentation note reaches 75% competency.
+        </p>
+      `;
+    }
+
+    function renderUnlockedBadge() {
+      badgeCard.className = "badge-card unlocked";
+      badgeCard.innerHTML = `
+        <div id="badgeVisualWrap">${unlockedBadgeSVG}</div>
+        <strong>Evidence Triage Certification</strong>
+        <p class="subtle">
+          Earned. Technician demonstrated 75% competency or higher in documentation reasoning.
+        </p>
+      `;
+    }
 
     function renderCaseList() {
       caseList.innerHTML = "";
@@ -754,16 +799,27 @@
       const note = normalizeText(rawNote);
 
       verificationBox.classList.remove("hidden");
+      badgeBox.classList.add("hidden");
 
       if (rawNote.length < 20) {
         verificationBox.innerHTML = `
           <h4>Documentation Feedback</h4>
+          <div class="score-chip">Competency Score: 0/4 (0%)</div>
           <p>Your explanation is too brief to show your reasoning clearly.</p>
-          <p>Add a sentence explaining what citation allows a reader or healthcare professional to do.</p>
+          <p>Revise and resubmit. You need at least <strong>3 of 4 criteria</strong> to earn the badge.</p>
+
+          <div class="feedback-label">Target criteria</div>
+          <ul class="checklist">
+            <li>verification</li>
+            <li>credibility or reliability</li>
+            <li>locating or tracing the source</li>
+            <li>professional responsibility or healthcare context</li>
+          </ul>
 
           <div class="feedback-label">Model revision</div>
-          <p>Clinical claims should include traceable evidence so readers can verify the information and locate the original research or guideline.</p>
+          <p>Clinical claims should include traceable evidence so readers can verify the information, evaluate its reliability, and locate the original research or guideline.</p>
         `;
+        systemStatus.textContent = "Revision required";
         return;
       }
 
@@ -816,7 +872,9 @@
         "accountability",
         "patient care",
         "safe care",
-        "healthcare"
+        "healthcare",
+        "clinical",
+        "clinician"
       ];
 
       const hasVerification = includesAny(note, verificationTerms);
@@ -824,123 +882,66 @@
       const hasLocation = includesAny(note, locationTerms);
       const hasResponsibility = includesAny(note, responsibilityTerms);
 
-      if (hasVerification && hasCredibility && hasLocation) {
+      const score = [hasVerification, hasCredibility, hasLocation, hasResponsibility].filter(Boolean).length;
+      const percent = Math.round((score / 4) * 100);
+      const meetsThreshold = score >= 3;
+
+      let missingCriteria = [];
+      if (!hasVerification) missingCriteria.push("verification");
+      if (!hasCredibility) missingCriteria.push("credibility or reliability");
+      if (!hasLocation) missingCriteria.push("locating or tracing the source");
+      if (!hasResponsibility) missingCriteria.push("professional responsibility or healthcare context");
+
+      if (meetsThreshold) {
         verificationBox.innerHTML = `
           <h4>Documentation Feedback</h4>
-          <p><strong>Strong explanation.</strong></p>
-          <p>Your note explains that citation allows readers to verify claims, judge credibility, and locate the original source. This shows strong evidence-handling reasoning.</p>
-          ${hasResponsibility ? `<p>You also connect documentation to professional responsibility, which strengthens the healthcare context of your explanation.</p>` : ""}
+          <div class="score-chip">Competency Score: ${score}/4 (${percent}%)</div>
+          <p><strong>Threshold met.</strong> Your note demonstrates at least 75% competency for this module.</p>
+          <p>You are showing a workable understanding of why clinical claims need traceable evidence.</p>
 
-          <div class="feedback-label">What you did well</div>
+          <div class="feedback-label">Criteria detected</div>
           <ul class="checklist">
-            <li>You explain verification clearly.</li>
-            <li>You connect citation to credibility or reliability.</li>
-            <li>You show that readers must be able to locate the source.</li>
+            ${hasVerification ? "<li>verification</li>" : ""}
+            ${hasCredibility ? "<li>credibility or reliability</li>" : ""}
+            ${hasLocation ? "<li>locating or tracing the source</li>" : ""}
+            ${hasResponsibility ? "<li>professional responsibility or healthcare context</li>" : ""}
           </ul>
 
-          <div class="feedback-label">Model revision</div>
-          <p>Clinical claims should include traceable evidence so readers can verify the information, evaluate its credibility, and locate the original research or guideline.</p>
-        `;
-      } else if (hasVerification && hasLocation && !hasCredibility) {
-        verificationBox.innerHTML = `
-          <h4>Documentation Feedback</h4>
-          <p>You correctly explain that citation helps readers verify a claim and locate the source.</p>
-          <p>To strengthen your explanation, add that citation also helps readers judge whether the information is credible or reliable.</p>
-
-          <div class="feedback-label">What to add</div>
-          <ul class="checklist">
-            <li>Mention credibility or reliability explicitly.</li>
-            <li>Explain that locating a source matters because readers need to evaluate it.</li>
-          </ul>
+          ${missingCriteria.length ? `
+            <div class="feedback-label">Optional improvement</div>
+            <p>You earned the badge. To make the note even stronger, add: <strong>${missingCriteria.join(", ")}</strong>.</p>
+          ` : ""}
 
           <div class="feedback-label">Model revision</div>
-          <p>Clinical claims should include traceable evidence so readers can verify the claim, locate the original source, and evaluate whether the information is reliable.</p>
+          <p>Clinical claims should include traceable evidence so readers can verify the information, evaluate its reliability, locate the original source, and understand its professional importance in healthcare decision-making.</p>
         `;
-      } else if (hasVerification && hasCredibility && !hasLocation) {
-        verificationBox.innerHTML = `
-          <h4>Documentation Feedback</h4>
-          <p>You correctly explain that citation supports verification and credibility.</p>
-          <p>To make your note more complete, add that citation should also help readers locate or trace the original research source.</p>
 
-          <div class="feedback-label">What to add</div>
-          <ul class="checklist">
-            <li>Explain that readers need to find the original source.</li>
-            <li>Use words like locate, trace, or source.</li>
-          </ul>
-
-          <div class="feedback-label">Model revision</div>
-          <p>Clinical claims should include traceable evidence so readers can verify the information, judge its credibility, and locate the original study or guideline.</p>
-        `;
-      } else if (hasVerification && !hasCredibility && !hasLocation) {
-        verificationBox.innerHTML = `
-          <h4>Documentation Feedback</h4>
-          <p>You correctly explain that citation allows readers to verify information.</p>
-          <p>To strengthen your explanation, also mention that citation helps readers judge credibility and locate the original source.</p>
-
-          <div class="feedback-label">What to add</div>
-          <ul class="checklist">
-            <li>Explain how citation helps readers evaluate reliability.</li>
-            <li>Explain that readers should be able to find the source.</li>
-          </ul>
-
-          <div class="feedback-label">Model revision</div>
-          <p>Clinical claims should include citation so readers can verify the evidence, evaluate whether it is reliable, and locate the original research.</p>
-        `;
-      } else if (hasLocation && !hasVerification) {
-        verificationBox.innerHTML = `
-          <h4>Documentation Feedback</h4>
-          <p>You correctly note that citation allows readers to locate the source.</p>
-          <p>A stronger explanation also explains why that matters: readers need to verify the claim and evaluate the evidence.</p>
-
-          <div class="feedback-label">What to add</div>
-          <ul class="checklist">
-            <li>Use language such as verify, check, or evidence.</li>
-            <li>Explain that source location supports evaluation, not just retrieval.</li>
-          </ul>
-
-          <div class="feedback-label">Model revision</div>
-          <p>Citation allows readers to locate the original source so they can verify the evidence supporting the claim and judge whether it is reliable.</p>
-        `;
-      } else if (hasCredibility && !hasVerification) {
-        verificationBox.innerHTML = `
-          <h4>Documentation Feedback</h4>
-          <p>You correctly connect citation to credibility.</p>
-          <p>To make the explanation stronger, add that citation also allows readers to verify the claim and trace it back to the original source.</p>
-
-          <div class="feedback-label">What to add</div>
-          <ul class="checklist">
-            <li>Mention verification directly.</li>
-            <li>Mention locating or tracing the source.</li>
-          </ul>
-
-          <div class="feedback-label">Model revision</div>
-          <p>Clinical claims should include citation because readers need to verify the information, assess its credibility, and trace it to the original source.</p>
-        `;
+        badgeUnlocked = true;
+        badgeBox.classList.remove("hidden");
+        renderUnlockedBadge();
+        systemStatus.textContent = "Module certified";
       } else {
         verificationBox.innerHTML = `
           <h4>Documentation Feedback</h4>
-          <p>Your explanation is moving in the right direction but remains too general.</p>
-          <p>Try explaining that citation allows readers to verify claims, assess credibility, and locate the original research or guideline.</p>
+          <div class="score-chip">Competency Score: ${score}/4 (${percent}%)</div>
+          <p><strong>Threshold not yet met.</strong> Revise and resubmit your note. You need at least <strong>3 of 4 criteria</strong> to earn the badge.</p>
 
-          <div class="feedback-label">What to add</div>
+          <div class="feedback-label">Missing criteria</div>
           <ul class="checklist">
-            <li>Explain what the reader can do with the citation.</li>
-            <li>Use at least one of these ideas: verification, credibility, location of source.</li>
+            ${missingCriteria.map(item => `<li>${item}</li>`).join("")}
           </ul>
 
-          <div class="feedback-label">Model revision</div>
-          <p>Clinical claims should include traceable evidence so readers can verify the research and judge whether the claim is reliable.</p>
-        `;
-      }
+          <div class="feedback-label">Revision guidance</div>
+          <p>Expand your note so it explains what readers or healthcare professionals can do with citation: verify the claim, judge reliability, locate the source, and understand why this matters professionally.</p>
 
-      badgeBox.classList.remove("hidden");
-      badgeCard.classList.add("unlocked");
-      badgeCard.innerHTML = `
-        ${badgeSVG}
-        <strong>Evidence Triage Certification</strong>
-        <p>Unlocked. Technician is authorized to identify claims requiring evidence documentation.</p>
-      `;
-      systemStatus.textContent = "Module certified";
+          <div class="feedback-label">Model revision</div>
+          <p>Clinical claims should include traceable evidence so readers can verify the information, judge whether it is reliable, and locate the original research or guideline behind the claim.</p>
+        `;
+
+        badgeUnlocked = false;
+        renderLockedBadge();
+        systemStatus.textContent = "Revision required";
+      }
     });
 
     restartBtn.addEventListener("click", () => {
@@ -948,6 +949,7 @@
       completedCases = 0;
       currentSelection = null;
       moduleFinished = false;
+      badgeUnlocked = false;
 
       studentLog.value = "";
       logSection.classList.add("hidden");
@@ -960,18 +962,11 @@
       restartBtn.classList.add("hidden");
       checkBtn.disabled = false;
 
-      badgeCard.className = "badge-card";
-      badgeCard.innerHTML = `
-        ${badgeSVG}
-        <strong>Evidence Triage Certification</strong>
-        <p class="subtle">
-          Locked until all triage cases are completed and the documentation note is reviewed.
-        </p>
-      `;
-
+      renderLockedBadge();
       renderCase();
     });
 
+    renderLockedBadge();
     renderCase();
   </script>
 </body>
