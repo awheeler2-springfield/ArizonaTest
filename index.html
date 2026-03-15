@@ -1,587 +1,719 @@
-from pathlib import Path
-
-html = """<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Evidence Case: Missing Evidence</title>
+  <title>APA Evidence Simulation — Module 1</title>
   <style>
     :root {
-      --bg: #f5f7fb;
+      --bg: #f4f8fb;
       --panel: #ffffff;
-      --text: #1f2937;
-      --muted: #6b7280;
-      --line: #dbe3ef;
-      --accent: #2357a5;
-      --accent-soft: #e8f0ff;
-      --good-bg: #ecfdf3;
-      --good-line: #1f9d55;
-      --bad-bg: #fff1f2;
-      --bad-line: #d14343;
-      --warn-bg: #fff8e6;
-      --warn-line: #c28a00;
-      --shadow: 0 10px 30px rgba(18, 38, 63, 0.06);
+      --panel-alt: #eef4f8;
+      --border: #c9d8e4;
+      --text: #183247;
+      --muted: #526b7d;
+      --accent: #2c6e91;
+      --accent-dark: #1f536e;
+      --success-bg: #e7f6ec;
+      --success-border: #7eb68f;
+      --error-bg: #fbeaea;
+      --error-border: #d48a8a;
+      --warning-bg: #fff8e8;
+      --warning-border: #d8b96a;
+      --shadow: 0 10px 24px rgba(24, 50, 71, 0.08);
+      --radius: 14px;
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
       font-family: Arial, Helvetica, sans-serif;
-      background: linear-gradient(180deg, #eef3fb 0%, var(--bg) 100%);
+      background: var(--bg);
       color: var(--text);
       line-height: 1.5;
     }
-    .wrap {
-      max-width: 1120px;
+
+    .app-shell {
+      max-width: 1000px;
       margin: 0 auto;
-      padding: 32px 20px 48px;
+      padding: 24px 16px 48px;
     }
-    .hero, .card {
+
+    .topbar {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .panel {
       background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: 18px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
       box-shadow: var(--shadow);
+      padding: 18px;
     }
-    .hero {
-      padding: 28px;
-      margin-bottom: 24px;
+
+    .panel h1,
+    .panel h2,
+    .panel h3,
+    .panel h4,
+    .panel p {
+      margin-top: 0;
     }
-    .eyebrow {
+
+    .system-title {
+      font-size: 1.5rem;
+      margin-bottom: 6px;
+    }
+
+    .subtle {
+      color: var(--muted);
+    }
+
+    .status-grid {
+      display: grid;
+      gap: 10px;
+    }
+
+    .status-chip {
+      background: var(--panel-alt);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 0.95rem;
+    }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 16px;
+    }
+
+    .module-label {
       display: inline-block;
-      font-size: 0.8rem;
-      letter-spacing: 0.08em;
+      font-size: 0.85rem;
+      letter-spacing: 0.06em;
       text-transform: uppercase;
-      color: var(--accent);
-      background: var(--accent-soft);
+      color: var(--accent-dark);
+      background: #dcecf5;
       padding: 6px 10px;
       border-radius: 999px;
       margin-bottom: 12px;
-      font-weight: 700;
     }
-    h1, h2, h3 { margin: 0 0 12px; }
-    h1 { font-size: 2rem; }
-    h2 { font-size: 1.25rem; }
-    p { margin: 0 0 12px; }
-    .muted { color: var(--muted); }
-    .grid {
+
+    .case-title {
+      font-size: 1.35rem;
+      margin-bottom: 6px;
+    }
+
+    .prompt-box {
+      background: var(--panel-alt);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      margin: 14px 0 18px;
+    }
+
+    .option-list {
       display: grid;
-      grid-template-columns: 300px 1fr;
-      gap: 20px;
-      align-items: start;
-    }
-    .sidebar, .main {
-      display: flex;
-      flex-direction: column;
-      gap: 18px;
-    }
-    .card { padding: 20px; }
-    .metric-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
       gap: 10px;
+      margin-bottom: 16px;
     }
-    .metric {
-      border: 1px solid var(--line);
-      border-radius: 14px;
+
+    .option {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
       padding: 12px;
-      background: #fafcff;
+      transition: border-color 0.2s ease, background 0.2s ease;
     }
-    .metric-label {
-      font-size: 0.78rem;
+
+    .option:hover {
+      border-color: var(--accent);
+      background: #f9fcfe;
+    }
+
+    .option input {
+      margin-top: 4px;
+    }
+
+    .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    button {
+      border: none;
+      border-radius: 10px;
+      padding: 11px 16px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: background 0.2s ease, transform 0.05s ease;
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    .primary-btn {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .primary-btn:hover {
+      background: var(--accent-dark);
+    }
+
+    .secondary-btn {
+      background: #dfeaf1;
+      color: var(--text);
+    }
+
+    .secondary-btn:hover {
+      background: #d2e2ec;
+    }
+
+    .ghost-btn {
+      background: #f0f5f8;
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+
+    .ghost-btn:hover {
+      background: #e7eef3;
+    }
+
+    .feedback {
+      display: none;
+      margin-top: 16px;
+      border-radius: 12px;
+      padding: 14px;
+      border: 1px solid;
+    }
+
+    .feedback.correct {
+      display: block;
+      background: var(--success-bg);
+      border-color: var(--success-border);
+    }
+
+    .feedback.incorrect {
+      display: block;
+      background: var(--error-bg);
+      border-color: var(--error-border);
+    }
+
+    .feedback h4 {
+      margin-bottom: 8px;
+    }
+
+    .sidebar-section {
+      margin-bottom: 14px;
+    }
+
+    .progress-track {
+      height: 12px;
+      width: 100%;
+      background: #e6eef3;
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      margin-top: 8px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--accent);
+      transition: width 0.3s ease;
+    }
+
+    .case-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .case-chip {
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: #f8fbfd;
+      font-size: 0.92rem;
+    }
+
+    .case-chip.active {
+      border-color: var(--accent);
+      background: #e7f1f7;
+      font-weight: bold;
+    }
+
+    .case-chip.complete {
+      border-color: var(--success-border);
+      background: #edf8f0;
+    }
+
+    .badge-card {
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      background: #fafcfd;
+    }
+
+    .badge-card.unlocked {
+      border-style: solid;
+      background: #edf8f0;
+      border-color: var(--success-border);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 130px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      font: inherit;
+      resize: vertical;
+      background: #fff;
+    }
+
+    .verification-box {
+      margin-top: 14px;
+      background: var(--warning-bg);
+      border: 1px solid var(--warning-border);
+      border-radius: 12px;
+      padding: 14px;
+    }
+
+    .checklist {
+      margin: 8px 0 0 18px;
+    }
+
+    .complete-screen {
+      margin-top: 18px;
+      background: #eef7fb;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+    }
+
+    .small-caps {
+      font-size: 0.82rem;
       text-transform: uppercase;
       letter-spacing: 0.06em;
       color: var(--muted);
-      margin-bottom: 4px;
     }
-    .metric-value {
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: var(--accent);
-    }
-    .progress {
-      height: 10px;
-      width: 100%;
-      background: #edf2f7;
-      border-radius: 999px;
-      overflow: hidden;
-      border: 1px solid var(--line);
-    }
-    .progress-bar {
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg, #4f7fd1, #2357a5);
-      transition: width 0.25s ease;
-    }
-    .task-meta {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-bottom: 10px;
-    }
-    .pill {
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      padding: 6px 10px;
-      font-size: 0.86rem;
-      background: #fafcff;
-    }
-    .claim {
-      padding: 14px;
-      border-radius: 12px;
-      background: #f8fbff;
-      border: 1px solid #d7e6ff;
-      margin-bottom: 14px;
-      font-size: 1.02rem;
-    }
-    .question {
-      margin: 14px 0 10px;
-      font-weight: 700;
-    }
-    .options {
-      display: grid;
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-    label.option {
-      display: block;
-      padding: 12px 14px;
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      cursor: pointer;
-      transition: border-color 0.2s ease, background 0.2s ease;
-      background: #fff;
-    }
-    label.option:hover {
-      border-color: #aac3ea;
-      background: #fafcff;
-    }
-    label.option input { margin-right: 10px; }
-    .actions {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-top: 6px;
-    }
-    button {
-      border: 0;
-      border-radius: 10px;
-      padding: 10px 14px;
-      font-weight: 700;
-      cursor: pointer;
-      font-size: 0.95rem;
-    }
-    .primary { background: var(--accent); color: white; }
-    .secondary {
-      background: #edf2f7;
-      color: var(--text);
-      border: 1px solid var(--line);
-    }
-    .feedback {
-      display: none;
-      margin-top: 14px;
-      padding: 14px;
-      border-radius: 12px;
-      border-left: 6px solid;
-    }
-    .feedback.good { display: block; background: var(--good-bg); border-color: var(--good-line); }
-    .feedback.bad { display: block; background: var(--bad-bg); border-color: var(--bad-line); }
-    .feedback.warn { display: block; background: var(--warn-bg); border-color: var(--warn-line); }
-    .locked {
-      opacity: 0.5;
-      pointer-events: none;
-      filter: grayscale(0.1);
-    }
-    .solved {
-      border-color: #a7f3d0;
-      box-shadow: 0 8px 24px rgba(31, 157, 85, 0.1);
-    }
-    .badge-card {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      border: 1px dashed var(--line);
-      border-radius: 16px;
-      padding: 14px;
-      background: #fbfcff;
-    }
-    .badge-icon {
-      width: 72px;
-      height: 72px;
-      border-radius: 18px;
-      background: linear-gradient(180deg, #fef3c7 0%, #fde68a 100%);
-      border: 1px solid #f3d27a;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      font-size: 2rem;
-      opacity: 0.45;
-      transition: transform 0.2s ease, opacity 0.2s ease;
-    }
-    .badge-icon.unlocked {
-      opacity: 1;
-      transform: scale(1.03);
-    }
-    .badge-title {
-      font-weight: 700;
-      margin-bottom: 4px;
-    }
-    .summary-list {
-      margin: 8px 0 0;
-      padding-left: 18px;
-    }
-    .footer-note {
-      margin-top: 16px;
-      padding: 14px;
-      border-radius: 12px;
-      background: #f8fafc;
-      border: 1px dashed var(--line);
-    }
-    .tiny { font-size: 0.88rem; }
-    @media (max-width: 920px) {
-      .grid { grid-template-columns: 1fr; }
+
+    @media (max-width: 840px) {
+      .topbar,
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <section class="hero">
-      <div class="eyebrow">Evidence Case</div>
-      <h1>The Mystery of Missing Evidence</h1>
-      <p>You are reviewing health-related claims before they are passed along to future nurses. Your task is to decide whether a claim is professionally usable <em>as written</em>. The point is not to memorize rules. The point is to recognize when evidence can be traced.</p>
-      <p class="muted">You likely already make judgments about whether claims are trustworthy. This module translates that existing instinct into a more professional, evidence-based practice.</p>
+  <div class="app-shell">
+    <section class="topbar">
+      <div class="panel">
+        <div class="small-caps">Clinical Evidence Management System</div>
+        <h1 class="system-title">APA Evidence Simulation</h1>
+        <p class="subtle">
+          Module 1 trains students to identify when clinical or health-related claims require
+          traceable evidence.
+        </p>
+      </div>
+
+      <div class="panel">
+        <div class="status-grid">
+          <div class="status-chip"><strong>Module:</strong> 1 — Evidence Triage</div>
+          <div class="status-chip"><strong>Role:</strong> Evidence Documentation Technician</div>
+          <div class="status-chip"><strong>Status:</strong> <span id="systemStatus">Case review in progress</span></div>
+        </div>
+      </div>
     </section>
 
-    <div class="grid">
-      <aside class="sidebar">
-        <section class="card">
-          <h2>Module dashboard</h2>
-          <div class="metric-row">
-            <div class="metric">
-              <div class="metric-label">Resolved</div>
-              <div class="metric-value"><span id="score">0</span>/5</div>
+    <section class="main-grid">
+      <main class="panel">
+        <div class="module-label">Module 1 — Evidence Triage</div>
+        <h2 id="caseTitle" class="case-title"></h2>
+        <p id="caseSubtitle" class="subtle"></p>
+
+        <div class="prompt-box">
+          <strong>Incoming Statement</strong>
+          <p id="casePrompt"></p>
+        </div>
+
+        <form id="optionsForm" class="option-list" aria-label="Answer options"></form>
+
+        <div class="button-row">
+          <button id="checkBtn" class="primary-btn" type="button">Run Diagnostic</button>
+          <button id="nextBtn" class="secondary-btn hidden" type="button">Next Case</button>
+          <button id="restartBtn" class="ghost-btn hidden" type="button">Restart Module</button>
+        </div>
+
+        <div id="feedbackBox" class="feedback" aria-live="polite"></div>
+
+        <section id="logSection" class="hidden">
+          <div class="complete-screen">
+            <div class="small-caps">Case Documentation Log</div>
+            <h3>End-of-Module Documentation Note</h3>
+            <p>
+              Enter a brief documentation note explaining
+              <strong>why a clinical claim should include traceable evidence.</strong>
+            </p>
+
+            <label for="studentLog" class="subtle">Documentation note (1–2 sentences)</label>
+            <textarea
+              id="studentLog"
+              placeholder="Enter your documentation note here..."
+            ></textarea>
+
+            <div class="button-row">
+              <button id="verifyBtn" class="primary-btn" type="button">Run Protocol Verification</button>
             </div>
-            <div class="metric">
-              <div class="metric-label">Competency</div>
-              <div class="metric-value" id="competencyStatus">Starting</div>
+
+            <div id="verificationBox" class="verification-box hidden">
+              <h4>Protocol Verification</h4>
+              <p>
+                <strong>System Reference Explanation:</strong>
+                Clinical claims must include traceable evidence so that other professionals can verify
+                the research or guideline supporting the recommendation.
+              </p>
+              <p><strong>Verification Checklist:</strong></p>
+              <ul class="checklist">
+                <li>verification of evidence</li>
+                <li>professional credibility</li>
+                <li>ability to locate the original research</li>
+              </ul>
             </div>
-          </div>
-          <div class="progress" aria-hidden="true">
-            <div class="progress-bar" id="progressBar"></div>
-          </div>
-          <div id="statusText" class="pill">Task 1 active</div>
-          <p class="muted tiny">You can retry any question. The goal is not speed. The goal is to build confidence in distinguishing between claims that merely sound credible and claims that are professionally traceable.</p>
-          <div class="metric-row">
-            <div class="metric">
-              <div class="metric-label">Attempts</div>
-              <div class="metric-value" id="attempts">0</div>
+
+            <div id="badgeBox" class="complete-screen hidden">
+              <div class="small-caps">Certification Awarded</div>
+              <h3>Evidence Triage Certification</h3>
+              <p>
+                Technician is authorized to identify claims requiring evidence documentation.
+              </p>
             </div>
-            <div class="metric">
-              <div class="metric-label">First-try wins</div>
-              <div class="metric-value" id="firstTry">0</div>
-            </div>
-          </div>
-          <div class="actions">
-            <button class="secondary" id="restartBtn" type="button">Restart module</button>
-          </div>
-        </section>
-
-        <section class="card">
-          <h2>Recognition</h2>
-          <div class="badge-card">
-            <div class="badge-icon" id="catBadge" aria-hidden="true">🐱</div>
-            <div>
-              <div class="badge-title">Competency earned: Traceable Evidence Awareness</div>
-              <p class="muted tiny" id="badgeText">In progress. Complete the module to unlock the badge and competency marker.</p>
-            </div>
-          </div>
-        </section>
-
-        <section class="card">
-          <h2>What success means</h2>
-          <ul class="summary-list tiny">
-            <li>You recognize when a claim lacks usable evidence.</li>
-            <li>You distinguish between sentences that sound credible and sentences that are actually traceable.</li>
-            <li>You connect citation to licensure culture and evidence-based reasoning.</li>
-          </ul>
-        </section>
-      </aside>
-
-      <main class="main">
-        <section class="card" id="task1">
-          <div class="task-meta">
-            <span class="pill">Difficulty: 1/5</span>
-            <span class="pill">Skill: Notice what matters</span>
-          </div>
-          <h2>Case File A</h2>
-          <div class="claim">“Research shows that hydration improves cognitive performance in adolescents.”</div>
-          <p class="question">As written, is this claim professionally usable?</p>
-          <div class="options">
-            <label class="option"><input type="radio" name="q1" value="wrong1" /> Yes. The phrase “research shows” is enough because it signals that evidence exists.</label>
-            <label class="option"><input type="radio" name="q1" value="correct" /> No. The claim may or may not be true, but a reader cannot trace the evidence from this wording alone.</label>
-            <label class="option"><input type="radio" name="q1" value="wrong2" /> Yes. If the sentence sounds formal, that is usually enough in academic writing.</label>
-          </div>
-          <div class="actions">
-            <button class="primary" data-question="q1" data-number="1" type="button">Check answer</button>
-            <button class="secondary" data-reset="q1" data-number="1" type="button">Reset</button>
-          </div>
-          <div class="feedback" id="feedback1"></div>
-        </section>
-
-        <section class="card locked" id="task2">
-          <div class="task-meta">
-            <span class="pill">Difficulty: 2/5</span>
-            <span class="pill">Skill: Choose the stronger evidence trail</span>
-          </div>
-          <h2>Case File B</h2>
-          <div class="claim">Which version gives a professional reader the clearest path back to the evidence?</div>
-          <div class="options">
-            <label class="option"><input type="radio" name="q2" value="wrong1" /> “Experts agree that sleep improves memory.”</label>
-            <label class="option"><input type="radio" name="q2" value="correct" /> “A 2023 study by Lin and Patel found that students who averaged 8 hours of sleep performed better on memory recall tasks.”</label>
-            <label class="option"><input type="radio" name="q2" value="wrong2" /> “It is well known that sleep helps memory.”</label>
-          </div>
-          <div class="actions">
-            <button class="primary" data-question="q2" data-number="2" type="button">Check answer</button>
-            <button class="secondary" data-reset="q2" data-number="2" type="button">Reset</button>
-          </div>
-          <div class="feedback" id="feedback2"></div>
-        </section>
-
-        <section class="card locked" id="task3">
-          <div class="task-meta">
-            <span class="pill">Difficulty: 3/5</span>
-            <span class="pill">Skill: Detect what is still missing</span>
-          </div>
-          <h2>Case File C</h2>
-          <div class="claim">“In 2024, researchers found that handwashing reduces infections in hospitals.”</div>
-          <p class="question">This sentence is stronger than File A. What is the biggest remaining problem?</p>
-          <div class="options">
-            <label class="option"><input type="radio" name="q3" value="wrong1" /> Nothing important is missing. The year and the word “researchers” make it professionally complete.</label>
-            <label class="option"><input type="radio" name="q3" value="correct" /> The reader still cannot tell which researchers or which study produced the finding.</label>
-            <label class="option"><input type="radio" name="q3" value="wrong2" /> The sentence is weak only because it does not use enough technical vocabulary.</label>
-          </div>
-          <div class="actions">
-            <button class="primary" data-question="q3" data-number="3" type="button">Check answer</button>
-            <button class="secondary" data-reset="q3" data-number="3" type="button">Reset</button>
-          </div>
-          <div class="feedback" id="feedback3"></div>
-        </section>
-
-        <section class="card locked" id="task4">
-          <div class="task-meta">
-            <span class="pill">Difficulty: 4/5</span>
-            <span class="pill">Skill: Compare close competitors</span>
-          </div>
-          <h2>Case File D</h2>
-          <div class="claim">Which sentence would be strongest in an evidence-based paragraph for beginning nursing students?</div>
-          <div class="options">
-            <label class="option"><input type="radio" name="q4" value="wrong1" /> “Studies prove that burnout affects nurses.”</label>
-            <label class="option"><input type="radio" name="q4" value="wrong2" /> “A recent article says burnout is a serious issue for nurses today.”</label>
-            <label class="option"><input type="radio" name="q4" value="correct" /> “Garcia and Owens (2022) found that early-career nurses reporting high burnout also reported lower job satisfaction.”</label>
-          </div>
-          <div class="actions">
-            <button class="primary" data-question="q4" data-number="4" type="button">Check answer</button>
-            <button class="secondary" data-reset="q4" data-number="4" type="button">Reset</button>
-          </div>
-          <div class="feedback" id="feedback4"></div>
-        </section>
-
-        <section class="card locked" id="task5">
-          <div class="task-meta">
-            <span class="pill">Difficulty: 5/5</span>
-            <span class="pill">Skill: Connect APA to licensure culture</span>
-          </div>
-          <h2>Case File E</h2>
-          <div class="claim">Why does this kind of evidence tracking matter in a nursing pathway?</div>
-          <div class="options">
-            <label class="option"><input type="radio" name="q5" value="wrong1" /> Mainly because APA is a strict formatting tradition and students are expected to memorize it early.</label>
-            <label class="option"><input type="radio" name="q5" value="wrong2" /> Mostly because nursing instructors prefer papers that look more formal than papers in other majors.</label>
-            <label class="option"><input type="radio" name="q5" value="correct" /> Because nursing professionals must justify claims and decisions with evidence other people can verify, evaluate, and use.</label>
-          </div>
-          <div class="actions">
-            <button class="primary" data-question="q5" data-number="5" type="button">Check answer</button>
-            <button class="secondary" data-reset="q5" data-number="5" type="button">Reset</button>
-          </div>
-          <div class="feedback" id="feedback5"></div>
-        </section>
-
-        <section class="card" id="completionCard" style="display:none;">
-          <h2>Module complete</h2>
-          <p>You have the baseline concept in place: before citation becomes a matter of punctuation, it is a matter of <strong>traceable evidence</strong>.</p>
-          <div class="footer-note">
-            <strong>What students should leave with:</strong>
-            <ul class="summary-list">
-              <li>Claims are weaker when no one can locate the evidence behind them.</li>
-              <li>Some sentences only <em>sound</em> evidence-based; stronger writers ask whether the source trail is usable.</li>
-              <li>APA matters in a nursing pathway because licensure culture values justified, evidence-based reasoning.</li>
-            </ul>
           </div>
         </section>
       </main>
-    </div>
+
+      <aside class="panel">
+        <section class="sidebar-section">
+          <h3>Module Progress</h3>
+          <p class="subtle"><span id="progressText">0 of 4 cases completed</span></p>
+          <div class="progress-track" aria-hidden="true">
+            <div id="progressFill" class="progress-fill"></div>
+          </div>
+        </section>
+
+        <section class="sidebar-section">
+          <h3>Case Queue</h3>
+          <div id="caseList" class="case-list"></div>
+        </section>
+
+        <section class="sidebar-section">
+          <h3>Competency Badge</h3>
+          <div id="badgeCard" class="badge-card">
+            <strong>Evidence Triage Certification</strong>
+            <p class="subtle">
+              Locked until all triage cases are completed and the documentation note is reviewed.
+            </p>
+          </div>
+        </section>
+      </aside>
+    </section>
   </div>
 
   <script>
-    (function () {
-      const completed = new Set();
-      const attemptsByQuestion = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0};
-      const solvedOnFirstTry = new Set();
-      let totalAttempts = 0;
-
-      const feedbackMap = {
-        1: {
-          correct: { className: 'good', text: 'Correct. The issue is not whether the statement might be true. The issue is that a reader has no way to trace the evidence. This is the rhetorical foundation of citation: claims need an accountable source trail.' },
-          wrong1: { className: 'bad', text: 'Not quite. Saying “research shows” gestures toward evidence, but it does not let a reader locate or assess that evidence. Professional writing needs more than the appearance of support.' },
-          wrong2: { className: 'bad', text: 'Not quite. Formal tone is not the same as evidentiary credibility. In nursing and other health fields, a claim matters only if the evidence behind it can be traced.' },
-          none: { className: 'warn', text: 'Select an answer first.' }
+    const moduleData = {
+      moduleTitle: "Evidence Triage",
+      cases: [
+        {
+          id: "1.1",
+          title: "Triage Scan",
+          subtitle: "Determine whether the statement requires evidence documentation.",
+          prompt:
+            "Hand hygiene reduces the spread of infection in healthcare settings.",
+          options: [
+            "This statement does not need citation because it is widely accepted common knowledge in healthcare instruction.",
+            "This statement requires citation because all healthcare-related statements must always include a source.",
+            "This statement requires citation only if it appears at the end of a paragraph.",
+            "This statement cannot be cited because it is too general."
+          ],
+          correctIndex: 0,
+          rationale:
+            "Some widely established general knowledge statements do not always require citation, especially when presented as broad background information rather than a specific research claim.",
+          implication:
+            "Evidence triage requires professionals to distinguish between general disciplinary knowledge and claims that need traceable support."
         },
-        2: {
-          correct: { className: 'good', text: 'Correct. This version gives a reader usable evidence coordinates: named researchers, a year, and a specific finding. It is not a full citation, but it begins the traceability that APA formalizes.' },
-          wrong1: { className: 'bad', text: 'Not quite. “Experts agree” sounds authoritative, but it does not help the reader locate the study or evaluate the evidence.' },
-          wrong2: { className: 'bad', text: 'Not quite. “It is well known” is a common weak move in academic writing because it substitutes confidence for identifiable evidence.' },
-          none: { className: 'warn', text: 'Select an answer first.' }
+        {
+          id: "1.2",
+          title: "Triage Scan",
+          subtitle: "Identify whether the claim should be supported by research.",
+          prompt:
+            "A new nursing protocol reduced patient falls by 32% over a six-month period.",
+          options: [
+            "This statement does not require citation because the percentage makes it sound precise.",
+            "This statement requires citation because it presents a specific outcome that readers should be able to verify.",
+            "This statement requires citation only if the protocol was used in more than one hospital.",
+            "This statement should not be cited because numbers are self-explanatory."
+          ],
+          correctIndex: 1,
+          rationale:
+            "A specific quantitative outcome is not general knowledge. Readers need a traceable source to verify where the figure came from and how it was established.",
+          implication:
+            "Clinical claims involving outcomes, measurements, or intervention results must be traceable so that professionals can evaluate their reliability."
         },
-        3: {
-          correct: { className: 'good', text: 'Correct. This is a harder version of the same problem. The sentence now has a year and a general reference to researchers, but the source trail is still not specific enough for a reader to trace.' },
-          wrong1: { className: 'bad', text: 'Not quite. The year helps, but it does not solve the main problem. A professional reader still cannot identify the source behind the claim.' },
-          wrong2: { className: 'bad', text: 'Not quite. Technical vocabulary is not the issue. The problem is traceability, not sophistication of wording.' },
-          none: { className: 'warn', text: 'Select an answer first.' }
+        {
+          id: "1.3",
+          title: "Attribution Check",
+          subtitle: "Evaluate whether the statement contains sufficient evidence attribution.",
+          prompt:
+            'Experts say that early mobility improves patient recovery after surgery.',
+          options: [
+            "This statement is fully supported because the phrase 'experts say' is enough attribution.",
+            "This statement needs clearer documentation because the source of the claim is vague and not traceable.",
+            "This statement does not need citation because it uses plain language.",
+            "This statement is correct only if it appears in a conclusion paragraph."
+          ],
+          correctIndex: 1,
+          rationale:
+            "The phrase 'experts say' is too vague. Readers cannot identify who made the claim or locate the source supporting it.",
+          implication:
+            "Professional evidence handling requires specific, traceable attribution rather than general appeals to unnamed authority."
         },
-        4: {
-          correct: { className: 'good', text: 'Correct. This is the strongest option because it identifies researchers, date, and a specific relationship they found. It moves much closer to the kind of evidence-based prose students will need later.' },
-          wrong1: { className: 'bad', text: 'Not quite. “Studies prove” sounds strong, but it gives the reader nothing usable to verify. It is persuasive posture without a source trail.' },
-          wrong2: { className: 'bad', text: 'Not quite. “A recent article” is still too vague. Better than nothing, but not strong enough for professional evidence work.' },
-          none: { className: 'warn', text: 'Select an answer first.' }
-        },
-        5: {
-          correct: { className: 'good', text: 'Correct. This is the connection to licensure culture: nurses are expected to reason from evidence that others can inspect and trust. APA is one early training ground for that professional habit.' },
-          wrong1: { className: 'bad', text: 'Not quite. Students often experience APA as memorization, but that is not its deepest purpose. The larger function is evidence accountability and clear knowledge tracing.' },
-          wrong2: { className: 'bad', text: 'Not quite. Surface form matters less than the professional logic behind it. The central issue is not looking formal; it is making evidence visible and usable.' },
-          none: { className: 'warn', text: 'Select an answer first.' }
+        {
+          id: "1.4",
+          title: "Claim Verification",
+          subtitle: "Determine whether a treatment recommendation requires documentation.",
+          prompt:
+            "Patients with hypertension should follow a low-sodium diet to improve cardiovascular health.",
+          options: [
+            "This recommendation does not require citation because it sounds medically responsible.",
+            "This recommendation requires citation because it presents healthcare guidance that should be linked to evidence or a clinical guideline.",
+            "This recommendation requires citation only if the writer disagrees with it.",
+            "This recommendation cannot be cited because it addresses many patients at once."
+          ],
+          correctIndex: 1,
+          rationale:
+            "A treatment or care recommendation should be connected to evidence or guideline-based support so readers can verify the basis for the advice.",
+          implication:
+            "Healthcare recommendations carry professional weight and should be documented in ways that allow others to confirm the evidence chain."
         }
-      };
+      ]
+    };
 
-      function updateProgress() {
-        const score = completed.size;
-        document.getElementById('score').textContent = String(score);
-        document.getElementById('progressBar').style.width = ((score / 5) * 100) + '%';
-        document.getElementById('firstTry').textContent = String(solvedOnFirstTry.size);
+    let currentCaseIndex = 0;
+    let completedCases = 0;
+    let currentSelection = null;
+    let moduleFinished = false;
 
-        const labels = {
-          0: 'Task 1 active',
-          1: 'Task 2 unlocked',
-          2: 'Task 3 unlocked',
-          3: 'Task 4 unlocked',
-          4: 'Task 5 unlocked',
-          5: 'All tasks resolved'
-        };
-        document.getElementById('statusText').textContent = labels[score];
+    const caseTitle = document.getElementById("caseTitle");
+    const caseSubtitle = document.getElementById("caseSubtitle");
+    const casePrompt = document.getElementById("casePrompt");
+    const optionsForm = document.getElementById("optionsForm");
+    const checkBtn = document.getElementById("checkBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const restartBtn = document.getElementById("restartBtn");
+    const feedbackBox = document.getElementById("feedbackBox");
+    const progressText = document.getElementById("progressText");
+    const progressFill = document.getElementById("progressFill");
+    const caseList = document.getElementById("caseList");
+    const systemStatus = document.getElementById("systemStatus");
+    const logSection = document.getElementById("logSection");
+    const verifyBtn = document.getElementById("verifyBtn");
+    const verificationBox = document.getElementById("verificationBox");
+    const badgeBox = document.getElementById("badgeBox");
+    const badgeCard = document.getElementById("badgeCard");
+    const studentLog = document.getElementById("studentLog");
 
-        if (score === 5) {
-          document.getElementById('completionCard').style.display = 'block';
-          document.getElementById('catBadge').classList.add('unlocked');
-          document.getElementById('badgeText').textContent = 'Unlocked. You completed the Traceable Evidence Awareness module and earned the cat badge.';
-          document.getElementById('competencyStatus').textContent = 'Earned';
-        } else if (score > 0) {
-          document.getElementById('competencyStatus').textContent = 'Building';
+    function renderCaseList() {
+      caseList.innerHTML = "";
+      moduleData.cases.forEach((item, index) => {
+        const chip = document.createElement("div");
+        chip.className = "case-chip";
+
+        if (index < completedCases) {
+          chip.classList.add("complete");
         }
-      }
-
-      function unlockNext(current) {
-        const next = document.getElementById('task' + (current + 1));
-        if (next) {
-          next.classList.remove('locked');
-        }
-      }
-
-      function checkAnswer(questionName, number) {
-        const selected = document.querySelector('input[name="' + questionName + '"]:checked');
-        const value = selected ? selected.value : 'none';
-        const feedback = feedbackMap[number][value] || feedbackMap[number].none;
-        const feedbackEl = document.getElementById('feedback' + number);
-
-        if (value !== 'none') {
-          attemptsByQuestion[number] += 1;
-          totalAttempts += 1;
-          document.getElementById('attempts').textContent = String(totalAttempts);
+        if (index === currentCaseIndex && !moduleFinished) {
+          chip.classList.add("active");
         }
 
-        feedbackEl.className = 'feedback ' + feedback.className;
-        feedbackEl.textContent = feedback.text;
+        chip.textContent = `${item.id} — ${item.title}`;
+        caseList.appendChild(chip);
+      });
+    }
 
-        if (value === 'correct' && !completed.has(number)) {
-          completed.add(number);
-          if (attemptsByQuestion[number] === 1) {
-            solvedOnFirstTry.add(number);
-          }
-          document.getElementById('task' + number).classList.add('solved');
-          updateProgress();
-          unlockNext(number);
-        }
-      }
+    function updateProgress() {
+      progressText.textContent = `${completedCases} of ${moduleData.cases.length} cases completed`;
+      const pct = (completedCases / moduleData.cases.length) * 100;
+      progressFill.style.width = `${pct}%`;
+    }
 
-      function resetQuestion(questionName, number) {
-        const checked = document.querySelector('input[name="' + questionName + '"]:checked');
-        if (checked) {
-          checked.checked = false;
-        }
-        const feedbackEl = document.getElementById('feedback' + number);
-        feedbackEl.className = 'feedback';
-        feedbackEl.textContent = '';
-      }
+    function resetFeedback() {
+      feedbackBox.className = "feedback";
+      feedbackBox.innerHTML = "";
+      nextBtn.classList.add("hidden");
+      currentSelection = null;
+    }
 
-      function restartGame() {
-        completed.clear();
-        solvedOnFirstTry.clear();
-        totalAttempts = 0;
-        document.getElementById('attempts').textContent = '0';
-        document.getElementById('firstTry').textContent = '0';
-        document.getElementById('score').textContent = '0';
-        document.getElementById('progressBar').style.width = '0%';
-        document.getElementById('statusText').textContent = 'Task 1 active';
-        document.getElementById('competencyStatus').textContent = 'Starting';
-        document.getElementById('completionCard').style.display = 'none';
-        document.getElementById('catBadge').classList.remove('unlocked');
-        document.getElementById('badgeText').textContent = 'In progress. Complete the module to unlock the badge and competency marker.';
+    function renderCase() {
+      const currentCase = moduleData.cases[currentCaseIndex];
+      caseTitle.textContent = `${currentCase.id} — ${currentCase.title}`;
+      caseSubtitle.textContent = currentCase.subtitle;
+      casePrompt.textContent = currentCase.prompt;
 
-        Object.keys(attemptsByQuestion).forEach(function (key) {
-          attemptsByQuestion[key] = 0;
+      optionsForm.innerHTML = "";
+      currentCase.options.forEach((optionText, index) => {
+        const label = document.createElement("label");
+        label.className = "option";
+
+        const radio = document.createElement("input");
+        radio.type = "radio";
+        radio.name = "answer";
+        radio.value = index;
+        radio.addEventListener("change", () => {
+          currentSelection = Number(radio.value);
         });
 
-        for (let i = 1; i <= 5; i += 1) {
-          const inputs = document.querySelectorAll('input[name="q' + i + '"]');
-          inputs.forEach(function (input) { input.checked = false; });
-          const feedbackEl = document.getElementById('feedback' + i);
-          feedbackEl.className = 'feedback';
-          feedbackEl.textContent = '';
-          const task = document.getElementById('task' + i);
-          task.classList.remove('solved');
-          if (i > 1) {
-            task.classList.add('locked');
-          }
-        }
-      }
+        const text = document.createElement("span");
+        text.textContent = optionText;
 
-      document.querySelectorAll('button[data-question]').forEach(function (button) {
-        button.addEventListener('click', function () {
-          checkAnswer(button.getAttribute('data-question'), Number(button.getAttribute('data-number')));
-        });
+        label.appendChild(radio);
+        label.appendChild(text);
+        optionsForm.appendChild(label);
       });
 
-      document.querySelectorAll('button[data-reset]').forEach(function (button) {
-        button.addEventListener('click', function () {
-          resetQuestion(button.getAttribute('data-reset'), Number(button.getAttribute('data-number')));
-        });
-      });
+      resetFeedback();
+      renderCaseList();
+      updateProgress();
+      systemStatus.textContent = "Case review in progress";
+    }
 
-      document.getElementById('restartBtn').addEventListener('click', restartGame);
-    })();
+    function showFeedback(isCorrect, caseObj) {
+      feedbackBox.className = `feedback ${isCorrect ? "correct" : "incorrect"}`;
+      feedbackBox.innerHTML = `
+        <h4>${isCorrect ? "Documentation Result: Correct" : "Documentation Result: Incorrect"}</h4>
+        <p><strong>Rationale:</strong> ${caseObj.rationale}</p>
+        <p><strong>Professional implication:</strong> ${caseObj.implication}</p>
+      `;
+    }
+
+    checkBtn.addEventListener("click", () => {
+      if (moduleFinished) return;
+
+      const currentCase = moduleData.cases[currentCaseIndex];
+
+      if (currentSelection === null) {
+        feedbackBox.className = "feedback incorrect";
+        feedbackBox.innerHTML = `
+          <h4>No selection recorded</h4>
+          <p>Select one response before running the diagnostic.</p>
+        `;
+        return;
+      }
+
+      const isCorrect = currentSelection === currentCase.correctIndex;
+      showFeedback(isCorrect, currentCase);
+
+      if (isCorrect) {
+        systemStatus.textContent = "Case verified";
+        nextBtn.classList.remove("hidden");
+        checkBtn.disabled = true;
+      } else {
+        systemStatus.textContent = "Case requires re-evaluation";
+      }
+    });
+
+    nextBtn.addEventListener("click", () => {
+      completedCases++;
+      checkBtn.disabled = false;
+
+      if (currentCaseIndex < moduleData.cases.length - 1) {
+        currentCaseIndex++;
+        renderCase();
+      } else {
+        moduleFinished = true;
+        updateProgress();
+        renderCaseList();
+        systemStatus.textContent = "All triage cases completed";
+        showLogSection();
+      }
+    });
+
+    function showLogSection() {
+      caseTitle.textContent = "Module Cases Completed";
+      caseSubtitle.textContent = "Proceed to the Case Documentation Log.";
+      casePrompt.textContent =
+        "All evidence triage cases have been completed. Enter a brief documentation note to finalize the module.";
+      optionsForm.innerHTML = "";
+      checkBtn.classList.add("hidden");
+      nextBtn.classList.add("hidden");
+      restartBtn.classList.remove("hidden");
+      logSection.classList.remove("hidden");
+    }
+
+    verifyBtn.addEventListener("click", () => {
+      const note = studentLog.value.trim();
+
+      if (note.length < 12) {
+        verificationBox.classList.remove("hidden");
+        verificationBox.insertAdjacentHTML(
+          "beforeend",
+          `<p><strong>System note:</strong> Your documentation entry is very brief. Expand it slightly so it explains the protocol more clearly.</p>`
+        );
+        return;
+      }
+
+      verificationBox.classList.remove("hidden");
+      badgeBox.classList.remove("hidden");
+      badgeCard.classList.add("unlocked");
+      badgeCard.innerHTML = `
+        <strong>Evidence Triage Certification</strong>
+        <p>Unlocked. Technician is authorized to identify claims requiring evidence documentation.</p>
+      `;
+      systemStatus.textContent = "Module certified";
+    });
+
+    restartBtn.addEventListener("click", () => {
+      currentCaseIndex = 0;
+      completedCases = 0;
+      currentSelection = null;
+      moduleFinished = false;
+      checkBtn.classList.remove("hidden");
+      checkBtn.disabled = false;
+      restartBtn.classList.add("hidden");
+      logSection.classList.add("hidden");
+      verificationBox.classList.add("hidden");
+      badgeBox.classList.add("hidden");
+      studentLog.value = "";
+      badgeCard.className = "badge-card";
+      badgeCard.innerHTML = `
+        <strong>Evidence Triage Certification</strong>
+        <p class="subtle">
+          Locked until all triage cases are completed and the documentation note is reviewed.
+        </p>
+      `;
+      renderCase();
+    });
+
+    renderCase();
   </script>
 </body>
 </html>
-"""
-
-path = Path("/mnt/data/evidence-case-week1-preview-fix.html")
-path.write_text(html, encoding="utf-8")
-print(f"Saved {path}")
