@@ -1,584 +1,991 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>APA Evidence Simulation — Module 1</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>APA Evidence Simulation — Module 1: Evidence Triage</title>
+  <style>
+    :root{
+      --bg:#f4f7fb;
+      --panel:#ffffff;
+      --panel-alt:#eef3f9;
+      --line:#d7e0ec;
+      --text:#1f2a37;
+      --muted:#5b6b7f;
+      --accent:#2f6fed;
+      --accent-dark:#1f4fb3;
+      --green:#1f8f5f;
+      --green-bg:#eaf7f1;
+      --red:#c53b3b;
+      --red-bg:#fdeeee;
+      --gold:#b8860b;
+      --badge-locked:#dfe6f1;
+      --badge-earned:#223a5e;
+      --shadow:0 8px 24px rgba(31,42,55,.08);
+      --radius:16px;
+    }
 
-<style>
-:root{
-  --bg:#f4f8fb;
-  --panel:#ffffff;
-  --border:#c9d8e4;
-  --accent:#2c6e91;
-  --accent-dark:#173c4e;
-  --muted:#5a7487;
-  --radius:12px;
-  --success-bg:#e7f6ec;
-  --success-border:#7eb68f;
-  --error-bg:#fbeaea;
-  --error-border:#d48a8a;
-  --warning-bg:#fff8e8;
-  --warning-border:#d8b96a;
-}
+    *{box-sizing:border-box}
 
-*{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Arial, Helvetica, sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      line-height:1.5;
+    }
 
-body{
-  margin:0;
-  font-family:Arial, Helvetica, sans-serif;
-  background:var(--bg);
-  color:#183247;
-  line-height:1.5;
-}
+    .app{
+      max-width:1100px;
+      margin:0 auto;
+      padding:24px 16px 48px;
+    }
 
-.app{
-  max-width:1100px;
-  margin:auto;
-  padding:24px;
-}
+    .screen{display:none}
+    .screen.active{display:block}
 
-.panel{
-  background:var(--panel);
-  border:1px solid var(--border);
-  border-radius:var(--radius);
-  padding:18px;
-  margin-bottom:16px;
-}
+    .topbar{
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:20px 22px;
+      margin-bottom:18px;
+    }
 
-h1,h2,h3,h4{margin-top:0}
+    .eyebrow{
+      font-size:12px;
+      font-weight:700;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      color:var(--accent);
+      margin-bottom:8px;
+    }
 
-.subtle{color:var(--muted)}
+    h1{
+      font-size:30px;
+      margin:0 0 8px 0;
+      line-height:1.15;
+    }
 
-.grid{
-  display:grid;
-  grid-template-columns:2fr 1fr;
-  gap:16px;
-}
+    h2{
+      font-size:22px;
+      margin:0 0 10px 0;
+      line-height:1.2;
+    }
 
-.prompt{
-  background:#eef4f8;
-  border:1px solid var(--border);
-  padding:14px;
-  border-radius:10px;
-  margin:10px 0;
-}
+    h3{
+      font-size:18px;
+      margin:0 0 8px 0;
+    }
 
-.option{
-  display:block;
-  border:1px solid var(--border);
-  border-radius:10px;
-  padding:10px;
-  margin-bottom:8px;
-  cursor:pointer;
-  background:#fff;
-}
+    p{margin:0 0 12px 0}
+    .muted{color:var(--muted)}
 
-.option:hover{
-  border-color:var(--accent);
-  background:#f9fcfe;
-}
+    .lifecycle{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:14px;
+    }
 
-button{
-  padding:10px 14px;
-  border:none;
-  border-radius:10px;
-  cursor:pointer;
-  font-size:0.95rem;
-}
+    .step{
+      font-size:12px;
+      font-weight:700;
+      letter-spacing:.03em;
+      padding:8px 12px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:var(--panel-alt);
+      color:var(--muted);
+    }
 
-.primary{
-  background:var(--accent);
-  color:white;
-}
+    .step.active{
+      background:var(--accent);
+      color:#fff;
+      border-color:var(--accent);
+    }
 
-.secondary{
-  background:#dfeaf1;
-  color:#183247;
-}
+    .briefing-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+      gap:16px;
+      margin:18px 0;
+    }
 
-.feedback{
-  margin-top:12px;
-  padding:12px;
-  border-radius:10px;
-  display:none;
-}
+    .concept-card{
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      padding:18px;
+      box-shadow:var(--shadow);
+      display:flex;
+      flex-direction:column;
+      min-height:100%;
+    }
 
-.correct{
-  background:var(--success-bg);
-  border:1px solid var(--success-border);
-}
+    .concept-icon{
+      width:48px;
+      height:48px;
+      border-radius:12px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:24px;
+      background:var(--panel-alt);
+      margin-bottom:12px;
+    }
 
-.incorrect{
-  background:var(--error-bg);
-  border:1px solid var(--error-border);
-}
+    .concept-card ul{
+      margin:8px 0 0 18px;
+      padding:0;
+      color:var(--muted);
+    }
 
-.badge{
-  text-align:center;
-  padding:16px;
-  border:1px dashed var(--border);
-  border-radius:10px;
-  background:#fafcfd;
-  transition:background 0.25s ease, border-color 0.25s ease, color 0.25s ease;
-}
+    .concept-card li{margin-bottom:4px}
 
-.badge.earned{
-  background:#163447;
-  color:white;
-  border-color:#163447;
-}
+    .reminder{
+      margin-top:12px;
+      font-size:14px;
+      color:var(--muted);
+    }
 
-.badge.earned .subtle{
-  color:#d3e2eb;
-}
+    .principle{
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-left:5px solid var(--accent);
+      border-radius:var(--radius);
+      padding:18px;
+      box-shadow:var(--shadow);
+      margin:8px 0 18px;
+    }
 
-.badge-visual{
-  width:100%;
-  max-width:180px;
-  margin:0 auto 10px;
-  display:block;
-}
+    .button-row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
 
-textarea{
-  width:100%;
-  min-height:120px;
-  border-radius:10px;
-  padding:10px;
-  border:1px solid var(--border);
-  font:inherit;
-  resize:vertical;
-}
+    button{
+      border:none;
+      border-radius:12px;
+      padding:12px 18px;
+      font-size:15px;
+      font-weight:700;
+      cursor:pointer;
+      transition:transform .08s ease, background .15s ease;
+    }
 
-.hidden{display:none !important}
+    button:active{transform:translateY(1px)}
 
-.progress{
-  height:10px;
-  background:#e6eef3;
-  border-radius:20px;
-  overflow:hidden;
-  margin-top:6px;
-}
+    .primary{
+      background:var(--accent);
+      color:#fff;
+    }
 
-.progressFill{
-  height:100%;
-  width:0%;
-  background:var(--accent);
-}
+    .primary:hover{background:var(--accent-dark)}
 
-.verification{
-  margin-top:14px;
-  background:var(--warning-bg);
-  border:1px solid var(--warning-border);
-  border-radius:10px;
-  padding:14px;
-}
+    .secondary{
+      background:var(--panel-alt);
+      color:var(--text);
+      border:1px solid var(--line);
+    }
 
-.check{color:green;font-weight:bold}
-.x{color:#c43a3a;font-weight:bold}
+    .layout{
+      display:grid;
+      grid-template-columns:minmax(0, 1fr) 300px;
+      gap:18px;
+    }
 
-.score-chip{
-  display:inline-block;
-  padding:6px 10px;
-  border-radius:999px;
-  background:#fff;
-  border:1px solid var(--warning-border);
-  font-weight:bold;
-  margin-bottom:10px;
-}
+    .panel{
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+    }
 
-.feedback-label{
-  font-weight:bold;
-  margin-top:12px;
-  margin-bottom:4px;
-}
+    .panel-body{padding:22px}
 
-.checklist{
-  margin:8px 0 0 18px;
-}
+    .module-overview{
+      margin-bottom:18px;
+    }
 
-@media (max-width:840px){
-  .grid{grid-template-columns:1fr}
-}
-</style>
+    .case-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      margin-bottom:14px;
+    }
+
+    .status-pill{
+      font-size:12px;
+      font-weight:700;
+      letter-spacing:.04em;
+      text-transform:uppercase;
+      padding:7px 10px;
+      border-radius:999px;
+      background:var(--panel-alt);
+      color:var(--muted);
+      border:1px solid var(--line);
+      white-space:nowrap;
+    }
+
+    .label{
+      font-size:12px;
+      font-weight:700;
+      letter-spacing:.06em;
+      text-transform:uppercase;
+      color:var(--muted);
+      margin-bottom:8px;
+    }
+
+    .statement-box{
+      background:var(--panel-alt);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:16px;
+      margin-bottom:18px;
+    }
+
+    .options{
+      display:grid;
+      gap:10px;
+      margin-bottom:16px;
+    }
+
+    .option{
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:14px;
+      cursor:pointer;
+    }
+
+    .option:hover{
+      border-color:#b9c9e2;
+      background:#fafcff;
+    }
+
+    .option.selected{
+      border-color:var(--accent);
+      background:#f2f7ff;
+    }
+
+    .option-letter{
+      width:28px;
+      height:28px;
+      border-radius:999px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:var(--panel-alt);
+      color:var(--accent);
+      font-weight:700;
+      flex:0 0 28px;
+      margin-top:2px;
+    }
+
+    .feedback{
+      display:none;
+      border-radius:14px;
+      padding:16px;
+      margin-top:14px;
+    }
+
+    .feedback.show{display:block}
+
+    .feedback.correct{
+      background:var(--green-bg);
+      border:1px solid #bfe4d2;
+    }
+
+    .feedback.incorrect{
+      background:var(--red-bg);
+      border:1px solid #f0c4c4;
+    }
+
+    .feedback .title{
+      font-weight:700;
+      margin-bottom:8px;
+    }
+
+    .feedback p:last-child{margin-bottom:0}
+
+    .sidebar-card{
+      padding:18px;
+      border-bottom:1px solid var(--line);
+    }
+
+    .sidebar-card:last-child{border-bottom:none}
+
+    .progress-track{
+      width:100%;
+      height:12px;
+      background:var(--panel-alt);
+      border-radius:999px;
+      overflow:hidden;
+      border:1px solid var(--line);
+      margin-top:10px;
+    }
+
+    .progress-fill{
+      height:100%;
+      width:0%;
+      background:var(--accent);
+      transition:width .25s ease;
+    }
+
+    .badge{
+      border-radius:16px;
+      padding:18px;
+      text-align:center;
+      background:var(--badge-locked);
+      border:1px solid #ccd7e7;
+      transition:all .25s ease;
+    }
+
+    .badge.earned{
+      background:var(--badge-earned);
+      border-color:var(--gold);
+      color:#fff;
+    }
+
+    .badge-icon{
+      font-size:32px;
+      margin-bottom:8px;
+    }
+
+    .badge-title{
+      font-weight:700;
+      margin-bottom:6px;
+    }
+
+    .badge-sub{
+      font-size:14px;
+      color:inherit;
+      opacity:.9;
+    }
+
+    .log-panel{
+      display:none;
+      margin-top:18px;
+    }
+
+    .log-panel.show{display:block}
+
+    textarea{
+      width:100%;
+      min-height:140px;
+      resize:vertical;
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:14px;
+      font:inherit;
+      color:var(--text);
+      background:#fff;
+    }
+
+    textarea:focus{
+      outline:2px solid #c8dafc;
+      border-color:var(--accent);
+    }
+
+    .verify-box{
+      display:none;
+      margin-top:16px;
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:16px;
+      background:var(--panel-alt);
+    }
+
+    .verify-box.show{display:block}
+
+    .score{
+      font-size:20px;
+      font-weight:700;
+      margin-bottom:12px;
+    }
+
+    .diagnostic-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      margin-bottom:12px;
+    }
+
+    .diag{
+      border-radius:12px;
+      padding:12px;
+      border:1px solid var(--line);
+      background:#fff;
+      font-size:14px;
+      font-weight:700;
+    }
+
+    .diag.pass{
+      color:var(--green);
+      border-color:#bfe4d2;
+      background:var(--green-bg);
+    }
+
+    .diag.fail{
+      color:var(--red);
+      border-color:#f0c4c4;
+      background:var(--red-bg);
+    }
+
+    .criteria-panel{
+      display:none;
+      margin:12px 0;
+      padding:14px;
+      border:1px solid var(--line);
+      border-radius:14px;
+      background:#fff;
+    }
+
+    .criteria-panel.show{display:block}
+
+    .criteria-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      margin-top:10px;
+    }
+
+    .criteria-item{
+      border:1px solid var(--line);
+      border-radius:12px;
+      background:var(--panel-alt);
+      padding:12px;
+      font-size:14px;
+      color:var(--muted);
+      font-weight:700;
+    }
+
+    .verify-message{
+      margin-top:10px;
+      color:var(--muted);
+    }
+
+    .model-box{
+      display:none;
+      margin-top:14px;
+      background:#fff;
+      border:1px solid var(--line);
+      border-left:5px solid var(--green);
+      border-radius:14px;
+      padding:16px;
+    }
+
+    .model-box.show{display:block}
+
+    .mini-note{
+      font-size:14px;
+      color:var(--muted);
+    }
+
+    .hidden{display:none!important}
+
+    @media (max-width: 900px){
+      .layout{grid-template-columns:1fr}
+      .diagnostic-grid{grid-template-columns:1fr}
+      .criteria-grid{grid-template-columns:1fr}
+    }
+  </style>
 </head>
-
 <body>
+  <div class="app">
 
-<div class="app">
+    <!-- INTRO SCREEN -->
+    <section id="introScreen" class="screen active">
+      <div class="topbar">
+        <div class="eyebrow">Clinical Evidence Management System</div>
+        <h1>Module 1 — Evidence Triage</h1>
+        <p class="muted">
+          Before evidence can be documented, a writer must first decide <strong>when evidence is needed</strong>.
+          In healthcare communication, not every statement functions the same way. Some claims are broad background
+          knowledge, while others make specific assertions, rely on vague attribution, or offer guidance that should
+          be traceable to evidence.
+        </p>
+        <p class="muted">
+          In this module, you will review incoming statements and determine whether they require documentation.
+        </p>
 
-  <div class="panel">
-    <h1>Clinical Evidence Management System</h1>
-    <p class="subtle">
-      This simulation trains APA citation as part of an evidence management workflow used in healthcare communication.
-      Evidence lifecycle:
-      <strong>Triage → Source Intake → Documentation → Citation Signals → Integration → Evidence Stewardship</strong>.
-      Module 1 focuses on the first step: <strong>recognizing when a claim requires evidence documentation.</strong>
-    </p>
-  </div>
-
-  <div class="grid">
-
-    <div>
-
-      <div class="panel">
-        <h2 id="caseTitle"></h2>
-
-        <div class="prompt">
-          <strong>Incoming Statement</strong>
-          <p id="casePrompt"></p>
+        <div class="lifecycle">
+          <div class="step active">Triage</div>
+          <div class="step">Source Intake</div>
+          <div class="step">Documentation</div>
+          <div class="step">Citation Signals</div>
+          <div class="step">Integration</div>
+          <div class="step">Stewardship</div>
         </div>
-
-        <div id="options"></div>
-
-        <button class="primary" id="checkBtn" type="button">Run Diagnostic</button>
-        <button class="secondary hidden" id="nextBtn" type="button">Next Case</button>
-
-        <div id="feedback" class="feedback"></div>
       </div>
 
-      <div id="logPanel" class="panel hidden">
-        <h3>Case Documentation Log</h3>
+      <div class="topbar">
+        <div class="eyebrow">What You Are Learning to Notice</div>
+        <div class="briefing-grid">
+          <div class="concept-card">
+            <div class="concept-icon">🌐</div>
+            <h3>Broad Background Knowledge</h3>
+            <p class="muted">Some statements express knowledge that is already widely established and may not require citation in every context.</p>
+            <ul>
+              <li>general background information</li>
+              <li>broadly accepted ideas</li>
+              <li>statements not tied to a specific study or result</li>
+            </ul>
+            <div class="reminder"><strong>Reminder:</strong> Not every sentence needs citation. Good writers make judgments about what readers would reasonably expect to be documented.</div>
+          </div>
 
+          <div class="concept-card">
+            <div class="concept-icon">📊</div>
+            <h3>Specific Measurable Claims</h3>
+            <p class="muted">Some statements report outcomes, percentages, comparisons, or findings that readers should be able to verify.</p>
+            <ul>
+              <li>numbers or percentages</li>
+              <li>reported results</li>
+              <li>measurable effects</li>
+              <li>specific outcomes</li>
+            </ul>
+            <div class="reminder"><strong>Reminder:</strong> The more specific and testable a claim is, the more likely it needs traceable evidence.</div>
+          </div>
+
+          <div class="concept-card">
+            <div class="concept-icon">🗣️</div>
+            <h3>Vague Attribution</h3>
+            <p class="muted">Some statements sound supported, but the source of support is unclear.</p>
+            <ul>
+              <li>“experts say”</li>
+              <li>“research shows”</li>
+              <li>“studies suggest”</li>
+              <li>unclear authority references</li>
+            </ul>
+            <div class="reminder"><strong>Reminder:</strong> Evidence is not truly usable if the reader cannot tell where it came from.</div>
+          </div>
+
+          <div class="concept-card">
+            <div class="concept-icon">🩺</div>
+            <h3>Healthcare Guidance or Recommendation</h3>
+            <p class="muted">Some statements advise action, treatment, prevention, or patient behavior. These usually need evidence because they shape real decisions.</p>
+            <ul>
+              <li>recommendations</li>
+              <li>treatment advice</li>
+              <li>prevention strategies</li>
+              <li>care or behavior guidance</li>
+            </ul>
+            <div class="reminder"><strong>Reminder:</strong> In healthcare writing, recommendations should be linked to evidence that readers can check.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="principle">
+        <div class="eyebrow">Key Principle</div>
         <p>
-          Enter a brief note explaining <strong>why a clinical claim should include traceable evidence.</strong>
+          Evidence triage is the first step in responsible documentation.
+          Before asking how to cite a source, a writer must first ask whether the claim actually requires evidence.
+        </p>
+        <p>
+          This is not about citing everything. It is about recognizing when readers need support that is
+          <strong>credible, traceable, and professionally responsible</strong>.
+        </p>
+      </div>
+
+      <p class="muted">When you are ready, begin the triage scan and evaluate each statement as it enters the system.</p>
+
+      <div class="button-row">
+        <button class="primary" id="beginBtn">Begin Evidence Triage</button>
+      </div>
+    </section>
+
+    <!-- ACTIVITY SCREEN -->
+    <section id="activityScreen" class="screen">
+      <div class="topbar">
+        <div class="eyebrow">Clinical Evidence Management System</div>
+        <h1>Module 1 — Evidence Triage</h1>
+        <p class="muted module-overview">
+          In this module, you will evaluate incoming statements before they move deeper into the evidence workflow.
+          Your task is to decide whether a claim functions as broad background knowledge, makes a specific assertion,
+          relies on vague attribution, or offers healthcare guidance that should be traceable to evidence.
         </p>
 
-        <textarea id="note" placeholder="Enter your documentation note here..."></textarea>
+        <div class="lifecycle">
+          <div class="step active">Triage</div>
+          <div class="step">Source Intake</div>
+          <div class="step">Documentation</div>
+          <div class="step">Citation Signals</div>
+          <div class="step">Integration</div>
+          <div class="step">Stewardship</div>
+        </div>
+      </div>
 
-        <div style="margin-top:12px;">
-          <button class="primary" id="verifyBtn" type="button">Run Protocol Verification</button>
+      <div class="layout">
+        <div>
+          <div class="panel">
+            <div class="panel-body">
+              <div class="case-header">
+                <div>
+                  <div class="eyebrow">Module 1 Case</div>
+                  <h2 id="caseTitle">Case 1.1 — Triage Scan</h2>
+                </div>
+                <div class="status-pill" id="caseStatus">Active</div>
+              </div>
+
+              <div class="label">Incoming Statement</div>
+              <div class="statement-box" id="casePrompt"></div>
+
+              <div class="label">Diagnostic Options</div>
+              <div class="options" id="options"></div>
+
+              <div class="button-row">
+                <button class="primary" id="checkBtn">Run Diagnostic</button>
+                <button class="secondary hidden" id="nextBtn">Next Case</button>
+              </div>
+
+              <div class="feedback" id="feedback"></div>
+            </div>
+          </div>
+
+          <div class="panel log-panel" id="logPanel">
+            <div class="panel-body">
+              <div class="eyebrow">Case Documentation Log</div>
+              <h2>Evidence Triage Note</h2>
+              <p class="muted">
+                Write a brief note explaining <strong>why a clinical claim should include traceable evidence.</strong>
+              </p>
+
+              <div class="label">Documentation Note</div>
+              <textarea id="noteField" placeholder="Write your note here before running protocol verification."></textarea>
+
+              <div class="button-row" style="margin-top:12px;">
+                <button class="primary" id="verifyBtn">Run Protocol Verification</button>
+              </div>
+
+              <div class="verify-box" id="verifyBox">
+                <div class="score" id="scoreLine"></div>
+                <div class="diagnostic-grid" id="diagnosticGrid"></div>
+
+                <div class="criteria-panel" id="criteriaPanel">
+                  <div class="eyebrow">Detected Competency Categories</div>
+                  <div class="criteria-grid">
+                    <div class="criteria-item">Verification of the claim</div>
+                    <div class="criteria-item">Credibility or reliability</div>
+                    <div class="criteria-item">Locating or tracing the source</div>
+                    <div class="criteria-item">Professional responsibility in healthcare communication</div>
+                  </div>
+                </div>
+
+                <div class="verify-message" id="verifyMessage"></div>
+
+                <div class="model-box" id="modelBox">
+                  <div class="eyebrow">Model Documentation Statement</div>
+                  <p id="modelText">
+                    Clinical claims should include traceable evidence so readers can verify whether the claim is supported,
+                    judge the credibility of the information, and locate the original source. In healthcare communication,
+                    this matters because recommendations and factual assertions can influence real decisions, so evidence
+                    must be professionally responsible as well as accurate.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div id="verification" class="verification hidden"></div>
+        <aside>
+          <div class="panel">
+            <div class="sidebar-card">
+              <div class="eyebrow">Progress</div>
+              <div id="progressText">0 of 4 cases completed</div>
+              <div class="progress-track">
+                <div class="progress-fill" id="progressFill"></div>
+              </div>
+            </div>
+
+            <div class="sidebar-card">
+              <div class="eyebrow">Badge</div>
+              <div class="badge" id="badgeCard">
+                <div class="badge-icon">🏥</div>
+                <div class="badge-title" id="badgeTitle">Evidence Triage Certification</div>
+                <div class="badge-sub" id="badgeSub">
+                  Locked until documentation note reaches 75% competency.
+                </div>
+              </div>
+            </div>
+
+            <div class="sidebar-card">
+              <div class="eyebrow">Module Focus</div>
+              <div class="mini-note">
+                Recognize when a claim needs support, identify vague attribution, and distinguish broad background knowledge from traceable evidence.
+              </div>
+            </div>
+          </div>
+        </aside>
       </div>
-
-    </div>
-
-    <div>
-
-      <div class="panel">
-        <h3>Progress</h3>
-        <div id="progressText">0 of 4 cases completed</div>
-        <div class="progress"><div class="progressFill" id="progressFill"></div></div>
-      </div>
-
-      <div class="panel badge" id="badgeCard">
-        <div id="badgeVisualWrap"></div>
-        <h3>Evidence Triage Certification</h3>
-        <p class="subtle">
-          Locked. Earn this badge by reaching <strong>75% competency</strong> on the documentation note.
-        </p>
-      </div>
-
-    </div>
-
+    </section>
   </div>
 
-</div>
+  <script>
+    const cases = [
+      {
+        title: "Case 1.1 — Triage Scan",
+        prompt: "Hand hygiene reduces the spread of infection in healthcare settings.",
+        options: [
+          "This statement does not require citation because it functions as broad disciplinary knowledge.",
+          "This statement must always include citation.",
+          "This statement requires citation only if it appears at the end of a paragraph.",
+          "This statement cannot be cited because it is general."
+        ],
+        correct: 0,
+        rationale: "Some broad background statements can function as common knowledge.",
+        implication: "APA judgment includes deciding when evidence is required and when knowledge is widely established."
+      },
+      {
+        title: "Case 1.2 — Claim Verification",
+        prompt: "A new nursing protocol reduced patient falls by 32% over six months.",
+        options: [
+          "This statement does not need citation because it uses numbers.",
+          "This statement requires citation because it reports a measurable outcome.",
+          "This statement requires citation only in journals.",
+          "This statement cannot be cited because numbers explain themselves."
+        ],
+        correct: 1,
+        rationale: "Specific outcome claims require evidence readers can verify.",
+        implication: "Quantified healthcare claims must be traceable."
+      },
+      {
+        title: "Case 1.3 — Attribution Check",
+        prompt: "Experts say early mobility improves recovery after surgery.",
+        options: [
+          "This statement is supported because experts are mentioned.",
+          "This statement needs clearer evidence documentation.",
+          "This statement does not require citation.",
+          "This statement is acceptable without source identification in a conclusion paragraph."
+        ],
+        correct: 1,
+        rationale: "\"Experts say\" is vague attribution.",
+        implication: "Evidence must be traceable to identifiable sources."
+      },
+      {
+        title: "Case 1.4 — Recommendation Review",
+        prompt: "Patients with hypertension should follow a low-sodium diet.",
+        options: [
+          "This recommendation needs citation because healthcare guidance should link to evidence.",
+          "This recommendation never needs citation.",
+          "This recommendation cannot be cited.",
+          "This recommendation needs citation only in textbooks."
+        ],
+        correct: 0,
+        rationale: "Treatment recommendations should be supported by research or guidelines.",
+        implication: "Citation ensures medical advice can be verified."
+      }
+    ];
 
-<script>
-const lockedBadgeSVG = `
-  <svg class="badge-visual" viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg" aria-label="Locked Evidence Triage badge">
-    <circle cx="110" cy="110" r="92" fill="#dcecf5" stroke="#2c6e91" stroke-width="8"/>
-    <circle cx="110" cy="110" r="74" fill="#ffffff" stroke="#c9d8e4" stroke-width="4"/>
-    <rect x="76" y="56" width="68" height="92" rx="8" fill="#eef4f8" stroke="#526b7d" stroke-width="3"/>
-    <rect x="92" y="44" width="36" height="16" rx="6" fill="#2c6e91"/>
-    <line x1="88" y1="82" x2="132" y2="82" stroke="#526b7d" stroke-width="4" stroke-linecap="round"/>
-    <line x1="88" y1="98" x2="132" y2="98" stroke="#526b7d" stroke-width="4" stroke-linecap="round"/>
-    <line x1="88" y1="114" x2="120" y2="114" stroke="#526b7d" stroke-width="4" stroke-linecap="round"/>
-    <circle cx="145" cy="145" r="24" fill="#2c6e91"/>
-    <path d="M134 145l8 8 16-18" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
-  </svg>
-`;
+    const competencyChecks = [
+      {
+        key: "verification",
+        label: "Verification of the claim",
+        terms: [
+          "verify","verification","check","support","supported","evidence","prove","confirm","back up","backed up"
+        ]
+      },
+      {
+        key: "credibility",
+        label: "Credibility or reliability",
+        terms: [
+          "credible","credibility","reliable","reliability","trustworthy","valid","accurate","accuracy"
+        ]
+      },
+      {
+        key: "source",
+        label: "Locating or tracing the source",
+        terms: [
+          "source","sources","locate","trace","track","find","original source","where it came from","study","research"
+        ]
+      },
+      {
+        key: "professional",
+        label: "Professional responsibility",
+        terms: [
+          "professional","responsibility","healthcare","patient","care","communication","clinical","decision","decisions"
+        ]
+      }
+    ];
 
-const unlockedBadgeSVG = `
-  <svg class="badge-visual" viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg" aria-label="Unlocked Evidence Triage badge">
-    <circle cx="110" cy="110" r="92" fill="#163447" stroke="#0f2431" stroke-width="8"/>
-    <circle cx="110" cy="110" r="74" fill="#1f455d" stroke="#89abc0" stroke-width="4"/>
-    <rect x="76" y="56" width="68" height="92" rx="8" fill="#dfeef6" stroke="#ffffff" stroke-width="3"/>
-    <rect x="92" y="44" width="36" height="16" rx="6" fill="#8fd3ff"/>
-    <line x1="88" y1="82" x2="132" y2="82" stroke="#35586f" stroke-width="4" stroke-linecap="round"/>
-    <line x1="88" y1="98" x2="132" y2="98" stroke="#35586f" stroke-width="4" stroke-linecap="round"/>
-    <line x1="88" y1="114" x2="120" y2="114" stroke="#35586f" stroke-width="4" stroke-linecap="round"/>
-    <circle cx="145" cy="145" r="24" fill="#0d2230"/>
-    <path d="M134 145l8 8 16-18" fill="none" stroke="#8ff0b5" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
-  </svg>
-`;
+    const beginBtn = document.getElementById("beginBtn");
+    const introScreen = document.getElementById("introScreen");
+    const activityScreen = document.getElementById("activityScreen");
 
-const cases = [
-  {
-    title: "1.1 — Triage Scan",
-    prompt: "Hand hygiene reduces the spread of infection in healthcare settings.",
-    options: [
-      "This statement does not require citation because it functions as broad disciplinary knowledge.",
-      "This statement must always include citation.",
-      "This statement requires citation only if it appears at the end of a paragraph.",
-      "This statement cannot be cited because it is general."
-    ],
-    correct: 0,
-    rationale: "Some broad background statements can function as common knowledge.",
-    implication: "APA judgment includes deciding when evidence is required and when knowledge is widely established."
-  },
-  {
-    title: "1.2 — Claim Verification",
-    prompt: "A new nursing protocol reduced patient falls by 32% over six months.",
-    options: [
-      "This statement does not need citation because it uses numbers.",
-      "This statement requires citation because it reports a measurable outcome.",
-      "This statement requires citation only in journals.",
-      "This statement cannot be cited because numbers explain themselves."
-    ],
-    correct: 1,
-    rationale: "Specific outcome claims require evidence readers can verify.",
-    implication: "Quantified healthcare claims must be traceable."
-  },
-  {
-    title: "1.3 — Attribution Check",
-    prompt: "Experts say early mobility improves recovery after surgery.",
-    options: [
-      "This statement is supported because experts are mentioned.",
-      "This statement needs clearer evidence documentation.",
-      "This statement does not require citation.",
-      "This statement is acceptable in a conclusion paragraph."
-    ],
-    correct: 1,
-    rationale: "'Experts say' is vague attribution.",
-    implication: "Evidence must be traceable to identifiable sources."
-  },
-  {
-    title: "1.4 — Recommendation Review",
-    prompt: "Patients with hypertension should follow a low-sodium diet.",
-    options: [
-      "This recommendation needs citation because healthcare guidance should link to evidence.",
-      "This recommendation never needs citation.",
-      "This recommendation cannot be cited.",
-      "This recommendation needs citation only in textbooks."
-    ],
-    correct: 0,
-    rationale: "Treatment recommendations should be supported by research or guidelines.",
-    implication: "Citation ensures medical advice can be verified."
-  }
-];
+    const caseTitle = document.getElementById("caseTitle");
+    const casePrompt = document.getElementById("casePrompt");
+    const optionsEl = document.getElementById("options");
+    const caseStatus = document.getElementById("caseStatus");
+    const feedbackEl = document.getElementById("feedback");
+    const checkBtn = document.getElementById("checkBtn");
+    const nextBtn = document.getElementById("nextBtn");
 
-let index = 0;
+    const progressText = document.getElementById("progressText");
+    const progressFill = document.getElementById("progressFill");
 
-const caseTitle = document.getElementById("caseTitle");
-const casePrompt = document.getElementById("casePrompt");
-const options = document.getElementById("options");
-const checkBtn = document.getElementById("checkBtn");
-const nextBtn = document.getElementById("nextBtn");
-const feedback = document.getElementById("feedback");
-const logPanel = document.getElementById("logPanel");
-const note = document.getElementById("note");
-const verifyBtn = document.getElementById("verifyBtn");
-const verification = document.getElementById("verification");
-const progressText = document.getElementById("progressText");
-const progressFill = document.getElementById("progressFill");
-const badgeCard = document.getElementById("badgeCard");
+    const logPanel = document.getElementById("logPanel");
+    const noteField = document.getElementById("noteField");
+    const verifyBtn = document.getElementById("verifyBtn");
+    const verifyBox = document.getElementById("verifyBox");
+    const scoreLine = document.getElementById("scoreLine");
+    const diagnosticGrid = document.getElementById("diagnosticGrid");
+    const verifyMessage = document.getElementById("verifyMessage");
+    const modelBox = document.getElementById("modelBox");
+    const criteriaPanel = document.getElementById("criteriaPanel");
 
-function renderLockedBadge() {
-  badgeCard.className = "panel badge";
-  badgeCard.innerHTML = `
-    <div id="badgeVisualWrap">${lockedBadgeSVG}</div>
-    <h3>Evidence Triage Certification</h3>
-    <p class="subtle">
-      Locked. Earn this badge by reaching <strong>75% competency</strong> on the documentation note.
-    </p>
-  `;
-}
+    const badgeCard = document.getElementById("badgeCard");
+    const badgeTitle = document.getElementById("badgeTitle");
+    const badgeSub = document.getElementById("badgeSub");
 
-function renderUnlockedBadge() {
-  badgeCard.className = "panel badge earned";
-  badgeCard.innerHTML = `
-    <div id="badgeVisualWrap">${unlockedBadgeSVG}</div>
-    <h3>Evidence Triage Certification</h3>
-    <p class="subtle">
-      Earned. Documentation competency threshold met.
-    </p>
-  `;
-}
+    let currentCase = 0;
+    let completedCases = 0;
+    let selectedIndex = null;
+    let lockedCurrentCase = false;
 
-function updateProgress() {
-  progressText.textContent = `${index} of ${cases.length} cases completed`;
-  progressFill.style.width = `${(index / cases.length) * 100}%`;
-}
+    beginBtn.addEventListener("click", () => {
+      introScreen.classList.remove("active");
+      activityScreen.classList.add("active");
+      renderCase();
+      updateProgress();
+    });
 
-function renderCase() {
-  const c = cases[index];
-  caseTitle.textContent = c.title;
-  casePrompt.textContent = c.prompt;
-  options.innerHTML = "";
+    function renderCase() {
+      const c = cases[currentCase];
+      selectedIndex = null;
+      lockedCurrentCase = false;
 
-  c.options.forEach((text, i) => {
-    const label = document.createElement("label");
-    label.className = "option";
+      caseTitle.textContent = c.title;
+      casePrompt.textContent = c.prompt;
+      caseStatus.textContent = "Active";
 
-    const radio = document.createElement("input");
-    radio.type = "radio";
-    radio.name = "ans";
-    radio.value = i;
+      optionsEl.innerHTML = "";
+      c.options.forEach((opt, i) => {
+        const option = document.createElement("div");
+        option.className = "option";
+        option.innerHTML = `
+          <div class="option-letter">${String.fromCharCode(65 + i)}</div>
+          <div>${opt}</div>
+        `;
+        option.addEventListener("click", () => {
+          if (lockedCurrentCase) return;
+          document.querySelectorAll(".option").forEach(el => el.classList.remove("selected"));
+          option.classList.add("selected");
+          selectedIndex = i;
+        });
+        optionsEl.appendChild(option);
+      });
 
-    label.appendChild(radio);
-    label.append(" " + text);
-    options.appendChild(label);
-  });
+      feedbackEl.className = "feedback";
+      feedbackEl.innerHTML = "";
+      nextBtn.classList.add("hidden");
+    }
 
-  feedback.style.display = "none";
-  nextBtn.classList.add("hidden");
-  checkBtn.disabled = false;
-  updateProgress();
-}
+    function updateProgress(final = false) {
+      const total = cases.length;
+      const done = final ? total : completedCases;
+      progressText.textContent = `${done} of ${total} cases completed`;
+      progressFill.style.width = `${(done / total) * 100}%`;
+    }
 
-checkBtn.addEventListener("click", () => {
-  const selected = document.querySelector("input[name='ans']:checked");
-  if (!selected) return;
+    checkBtn.addEventListener("click", () => {
+      if (selectedIndex === null || lockedCurrentCase) return;
 
-  const answer = Number(selected.value);
-  const c = cases[index];
+      const c = cases[currentCase];
+      const correct = selectedIndex === c.correct;
 
-  feedback.style.display = "block";
+      feedbackEl.classList.add("show");
 
-  if (answer === c.correct) {
-    feedback.className = "feedback correct";
-    feedback.innerHTML = `
-      <strong>Correct</strong><br>
-      ${c.rationale}<br><br>
-      <strong>Professional implication:</strong> ${c.implication}
-    `;
-    nextBtn.classList.remove("hidden");
-    checkBtn.disabled = true;
-  } else {
-    feedback.className = "feedback incorrect";
-    feedback.innerHTML = `
-      <strong>Incorrect</strong><br>
-      ${c.rationale}<br><br>
-      <strong>Professional implication:</strong> ${c.implication}
-    `;
-  }
-});
+      if (correct) {
+        lockedCurrentCase = true;
+        feedbackEl.className = "feedback show correct";
+        feedbackEl.innerHTML = `
+          <div class="title">✓ Correct Assessment</div>
+          <p><strong>Rationale:</strong> ${c.rationale}</p>
+          <p><strong>Professional implication:</strong> ${c.implication}</p>
+        `;
+        caseStatus.textContent = "Reviewed";
+        nextBtn.classList.remove("hidden");
+      } else {
+        feedbackEl.className = "feedback show incorrect";
+        feedbackEl.innerHTML = `
+          <div class="title">✗ Reassessment Needed</div>
+          <p><strong>Rationale:</strong> ${c.rationale}</p>
+          <p><strong>Professional implication:</strong> ${c.implication}</p>
+        `;
+      }
+    });
 
-nextBtn.addEventListener("click", () => {
-  index++;
+    nextBtn.addEventListener("click", () => {
+      completedCases++;
+      currentCase++;
 
-  if (index < cases.length) {
-    renderCase();
-  } else {
-    caseTitle.textContent = "Module Cases Completed";
-    casePrompt.textContent = "Proceed to the Case Documentation Log.";
-    options.innerHTML = "";
-    checkBtn.classList.add("hidden");
-    nextBtn.classList.add("hidden");
-    feedback.style.display = "none";
-    progressText.textContent = "4 of 4 cases completed";
-    progressFill.style.width = "100%";
-    logPanel.classList.remove("hidden");
-  }
-});
+      if (currentCase < cases.length) {
+        renderCase();
+        updateProgress();
+      } else {
+        updateProgress(true);
+        showLogPanel();
+      }
+    });
 
-function includesAny(text, terms) {
-  return terms.some(term => text.includes(term));
-}
+    function showLogPanel() {
+      caseTitle.textContent = "All Cases Completed";
+      casePrompt.textContent = "Proceed to the Evidence Triage Note below.";
+      optionsEl.innerHTML = "";
+      feedbackEl.className = "feedback";
+      feedbackEl.innerHTML = "";
+      checkBtn.classList.add("hidden");
+      nextBtn.classList.add("hidden");
+      caseStatus.textContent = "Complete";
+      logPanel.classList.add("show");
+    }
 
-function normalizeText(text) {
-  return text
-    .toLowerCase()
-    .replace(/[.,/#!$%^&*;:{}=\-_`~()?"']/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
+    function includesAny(text, terms) {
+      return terms.some(term => text.includes(term));
+    }
 
-verifyBtn.addEventListener("click", () => {
-  const raw = note.value.trim();
-  const text = normalizeText(raw);
+    verifyBtn.addEventListener("click", () => {
+      const text = noteField.value.trim().toLowerCase();
+      if (!text) return;
 
-  verification.classList.remove("hidden");
+      const results = competencyChecks.map(item => ({
+        label: item.label,
+        pass: includesAny(text, item.terms)
+      }));
 
-  if (raw.length < 20) {
-    verification.innerHTML = `
-      <h4>Protocol Verification</h4>
-      <div class="score-chip">Competency Score: 0/4 (0%)</div>
-      <p>Your explanation is too brief to assess fully. Revise and resubmit.</p>
+      const score = results.filter(r => r.pass).length;
+      const percent = Math.round((score / 4) * 100);
 
-      <ul class="checklist">
-        <li><span class="x">✗</span> verification</li>
-        <li><span class="x">✗</span> credibility or reliability</li>
-        <li><span class="x">✗</span> source traceability</li>
-        <li><span class="x">✗</span> professional responsibility</li>
-      </ul>
-    `;
-    renderLockedBadge();
-    return;
-  }
+      verifyBox.classList.add("show");
+      criteriaPanel.classList.add("show");
 
-  const verificationTerms = [
-    "verify", "verification", "check", "checked", "evidence", "support", "supported"
-  ];
+      scoreLine.textContent = `Competency Score: ${score}/4 (${percent}%)`;
 
-  const credibilityTerms = [
-    "credible", "credibility", "reliable", "reliability", "trust", "trustworthy", "valid"
-  ];
+      diagnosticGrid.innerHTML = "";
+      results.forEach(r => {
+        const box = document.createElement("div");
+        box.className = `diag ${r.pass ? "pass" : "fail"}`;
+        box.textContent = `${r.pass ? "✓" : "✗"} ${r.label}`;
+        diagnosticGrid.appendChild(box);
+      });
 
-  const sourceTerms = [
-    "source", "sources", "locate", "located", "find", "found", "trace", "traceable",
-    "research", "study", "guideline", "where it came from"
-  ];
-
-  const professionalTerms = [
-    "professional", "responsibility", "responsible", "healthcare", "clinical",
-    "patient", "patients", "care", "accountable", "accountability"
-  ];
-
-  const hasVerification = includesAny(text, verificationTerms);
-  const hasCredibility = includesAny(text, credibilityTerms);
-  const hasSource = includesAny(text, sourceTerms);
-  const hasProfessional = includesAny(text, professionalTerms);
-
-  const score = [hasVerification, hasCredibility, hasSource, hasProfessional].filter(Boolean).length;
-  const percent = Math.round((score / 4) * 100);
-  const passed = score >= 3;
-
-  verification.innerHTML = `
-    <h4>Protocol Verification</h4>
-    <div class="score-chip">Competency Score: ${score}/4 (${percent}%)</div>
-
-    <ul class="checklist">
-      <li>${hasVerification ? '<span class="check">✓</span>' : '<span class="x">✗</span>'} verification</li>
-      <li>${hasCredibility ? '<span class="check">✓</span>' : '<span class="x">✗</span>'} credibility or reliability</li>
-      <li>${hasSource ? '<span class="check">✓</span>' : '<span class="x">✗</span>'} source traceability</li>
-      <li>${hasProfessional ? '<span class="check">✓</span>' : '<span class="x">✗</span>'} professional responsibility</li>
-    </ul>
-  `;
-
-  if (passed) {
-    verification.innerHTML += `
-      <p><strong>Threshold met.</strong> You reached the 75% competency requirement for this module.</p>
-
-      <div class="feedback-label">Model documentation statement</div>
-      <p>
-        Clinical claims should include traceable evidence so readers can verify the information,
-        evaluate whether it is reliable, and locate the original source supporting the claim.
-        In healthcare writing, this also supports professional accountability.
-      </p>
-    `;
-    renderUnlockedBadge();
-  } else {
-    verification.innerHTML += `
-      <p><strong>Threshold not yet met.</strong> Revise your note and run verification again. You need <strong>3 of 4 criteria</strong>.</p>
-
-      <div class="feedback-label">Revision guidance</div>
-      <p>
-        Strengthen your response by explaining what citation allows a reader or healthcare professional to do:
-        verify the claim, judge reliability, locate the source, and understand why documentation matters professionally.
-      </p>
-    `;
-    renderLockedBadge();
-  }
-});
-
-renderLockedBadge();
-renderCase();
-</script>
-
+      if (score >= 3) {
+        verifyMessage.innerHTML = `<strong>Threshold met.</strong> Your note addresses at least 75% of the required concepts.`;
+        badgeCard.classList.add("earned");
+        badgeTitle.textContent = "Evidence Triage Certification";
+        badgeSub.textContent = "Competency verified. Module 1 complete.";
+        modelBox.classList.add("show");
+      } else {
+        verifyMessage.innerHTML = `Revise and resubmit. You need to address at least 3 of 4 competency areas.`;
+        modelBox.classList.remove("show");
+      }
+    });
+  </script>
 </body>
 </html>
